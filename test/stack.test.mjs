@@ -90,11 +90,10 @@ test('SC-R04 only Systainer kinds show; others are counted', () => {
   const l = s.layout(r);
   assert.deepEqual([l.tray.length, l.others], [1, 2]);
 });
-test('SC-R34 L on M is allowed and marked to check', () => {
+test('SC-R34 L and M latch either way, with nothing to check', () => {
   const r = fresh();
   const m = box(r, 'sys3-m-187'), l = box(r, 'sys3-l-187');
-  const k = s.canSit(l, m);
-  assert.deepEqual([k.ok, k.check], [true, true]);
+  for (const k of [s.canSit(l, m), s.canSit(m, l)]) assert.deepEqual([k.ok, k.check], [true, false]);
 });
 test('SC-R12 inserting between boxes keeps the stack whole', () => {
   const r = fresh();

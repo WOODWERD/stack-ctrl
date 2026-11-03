@@ -52,8 +52,8 @@ export function canSit(upper, lower) {
   if (u.fp === 'MAXI' || l.fp === 'MAXI') return u.fp === l.fp ? { ok: true } : { ok: false, why: 'A Maxi only stacks with another Maxi here. Two boxes side by side are for a later version.' };
   if (u.fp === 'XXL' || l.fp === 'XXL') return u.fp === l.fp ? { ok: true } : { ok: false, why: 'An XXL only stacks with another XXL here. Side by side is for a later version.' };
   if (u.gen === 'C' && l.gen !== 'C' && !l.noModel && !l.notListed) return { ok: false, why: 'Classic boxes go underneath newer ones.' };
-  const lm = (m) => (m.fp === 'L' ? 'L' : 'M');
-  return { ok: true, check: lm(u) !== lm(l) || u.noModel || u.notListed || l.noModel || l.notListed };
+  // L and M latch the same way as any two boxes, either on top (Drew, 2026-11-02; SC-R34)
+  return { ok: true, check: !!(u.noModel || u.notListed || l.noModel || l.notListed) };
 }
 
 // ---------- stacks from sitsOn (SC-R45) ----------
