@@ -117,9 +117,11 @@ export function inches(mm) { const t = Math.round(mm / 25.4 * 8); const r = t % 
 export const mmText = (mm) => `${Math.round(mm).toLocaleString('en-US')} mm`;
 
 // ---------- moves (SC-R40 to SC-R44) ----------
-// to: { tray: true } | { floor: true } | { on: id } — `on` puts the box directly on that box or cart, and whatever
-// sat there now sits on the moved box. Boxes above the moved box close the gap. Returns { ok, why, undo }.
+// to: { tray: true } | { floor: true } | { on: id } | { under: id } — `on` puts the box directly on that box or cart,
+// and whatever sat there now sits on the moved box. `under` slides it beneath the bottom box of a floor stack, which
+// lifts the whole stack onto it (SC-R40). Boxes above the moved box close the gap. Returns { ok, why, undo }.
 export function moveBox(rec, id, to) {
+  if (to.under) return moveUnder(rec, id, to.under);
   const c = getC(rec, id);
   if (!c || !isBox(c)) return { ok: false, why: 'That box isn\'t in Stack Ctrl.' };
   const above = rec.containers.filter((x) => isBox(x) && x.sitsOn === id);
@@ -144,6 +146,22 @@ export function moveBox(rec, id, to) {
     c.location = locationOf(rec, target.id);
   } else { c.sitsOn = ''; c.location = was; c.standing = !!to.floor; } // SC-R41, SC-R43: floor or tray, keeping its last location
   return { ok: true, undo: () => { for (const [t, s, l, st] of before) { const x = getC(rec, t); x.sitsOn = s; x.location = l; if (st === undefined) delete x.standing; else x.standing = st; } }, touched: [...touched] };
+}
+
+function moveUnder(rec, id, bottomId) {
+  const c = getC(rec, id), b = getC(rec, bottomId);
+  if (!c || !isBox(c) || !b || b.id === id) return { ok: false, why: 'That box isn\'t in Stack Ctrl.' };
+  if (isCart(c)) return { ok: false, why: 'A cart can\'t go under a stack here. Drop the stack\'s boxes on the cart instead.' };
+  if (b.sitsOn && getC(rec, b.sitsOn) && isBox(getC(rec, b.sitsOn))) return moveBox(rec, id, { on: b.sitsOn }); // not the bottom: same as between
+  const k = canSit(b, c);
+  if (!k.ok) return { ok: false, why: `${b.id} can't sit on ${c.id}: ${k.why}` };
+  // take the box out of wherever it was, then slide it under
+  const out = c.sitsOn || rec.containers.some((x) => isBox(x) && x.sitsOn === id) ? moveBox(rec, id, { tray: true }) : null;
+  const before = [b, c].map((x) => [x.id, x.sitsOn, x.location, x.standing]);
+  const loc = locationOf(rec, b.id);
+  c.sitsOn = b.sitsOn; c.standing = true; c.location = loc;
+  b.sitsOn = c.id; b.standing = false;
+  return { ok: true, undo: () => { for (const [t, so, l, st] of before) { const x = getC(rec, t); x.sitsOn = so; x.location = l; if (st === undefined) delete x.standing; else x.standing = st; } out?.undo(); }, touched: [...new Set([b.id, c.id, ...(out?.touched || [])])] };
 }
 
 // ---------- search (SC-R60) ----------

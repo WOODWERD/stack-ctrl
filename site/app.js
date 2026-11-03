@@ -76,6 +76,13 @@ function slot(target, w) {
   if (!ok) return null;
   return h('span', { class: `drop${d.over === target ? ' on' : ''}`, 'data-on': target, style: `width:${w}px` });
 }
+// The place under the bottom box of a floor stack: the carried box goes underneath and lifts the stack (SC-R40)
+function slotUnder(bottom, w) {
+  const d = S.drag; if (!d || d.id === bottom) return null;
+  const c = s.getC(rec(), d.id), b = s.getC(rec(), bottom);
+  if (!c || s.isCart(c) || !s.canSit(b, c).ok) return null;
+  return h('span', { class: `drop${d.over === 'under:' + bottom ? ' on' : ''}`, 'data-under': bottom, style: `width:${w}px` });
+}
 
 // ---------- page ----------
 function render() {
@@ -118,6 +125,7 @@ function render() {
       const below = i > 0 ? s.getC(r, st.boxes[i - 1]) : st.cart ? s.getC(r, st.cart) : null;
       kids.push(boxEl(c, s.addOf(m, i === 0 && !st.cart), { hit: hits.has(id), bad: badOf(id), check: below ? !!s.canSit(c, below).check : false }));
       if (i > 0) kids.push(slot(st.boxes[i - 1], ws[i - 1]));
+      else if (!st.cart) kids.push(slotUnder(id, ws[0]));
     }
     if (st.cart) { if (st.boxes.length) kids.push(slot(st.cart, px(508))); kids.push(cartEl(s.getC(r, st.cart))); }
     else if (st.standsOn) kids.push(h('div', { class: 'block' }, st.standsOn));
@@ -203,7 +211,7 @@ function keyMove(e, id) {
   const i = st.boxes.indexOf(id);
   if (e.key === 'ArrowUp' && i < st.boxes.length - 1) move(id, { on: st.boxes[i + 1] });
   if (e.key === 'ArrowDown' && i > 1) move(id, { on: st.boxes[i - 2] });
-  if (e.key === 'ArrowDown' && i === 1 && st.cart) move(id, { on: st.cart });
+  if (e.key === 'ArrowDown' && i === 1) move(id, st.cart ? { on: st.cart } : { under: st.boxes[0] });
   requestAnimationFrame(() => document.querySelector(`[data-id="${id}"]`)?.focus());
 }
 
@@ -216,9 +224,9 @@ function startDrag(e, id) {
   const moveH = (ev) => {
     if (!started) { if (Math.hypot(ev.clientX - x0, ev.clientY - y0) < 6) return; started = true; S.drag = { id, over: '' }; S.sel = ''; ghost = src.cloneNode(true); ghost.className += ' drag'; ghost.style.position = 'fixed'; ghost.style.pointerEvents = 'none'; ghost.style.zIndex = 50; document.body.append(ghost); render(); }
     ghost.style.left = `${ev.clientX - ghost.offsetWidth / 2}px`; ghost.style.top = `${ev.clientY - 12}px`;
-    const t = document.elementFromPoint(ev.clientX, ev.clientY)?.closest('[data-on]');
-    const over = t ? t.dataset.on : '';
-    if (over !== S.drag.over) { S.drag.over = over; document.querySelectorAll('.drop').forEach((d) => d.classList.toggle('on', d.dataset.on === over)); }
+    const t = document.elementFromPoint(ev.clientX, ev.clientY)?.closest('[data-on],[data-under]');
+    const over = t ? (t.dataset.on || 'under:' + t.dataset.under) : '';
+    if (over !== S.drag.over) { S.drag.over = over; document.querySelectorAll('.drop').forEach((d) => d.classList.toggle('on', (d.dataset.on || 'under:' + d.dataset.under) === over)); }
   };
   const up = (ev) => {
     window.removeEventListener('pointermove', moveH); window.removeEventListener('pointerup', up); window.removeEventListener('keydown', esc);
@@ -226,9 +234,10 @@ function startDrag(e, id) {
     ghost?.remove(); S.justDragged = true; setTimeout(() => { S.justDragged = false; }, 50);
     const el = document.elementFromPoint(ev.clientX, ev.clientY);
     S.drag = null;
-    const on = el?.closest('[data-on]'), fl = el?.closest('[data-floor]'), tr = el?.closest('[data-tray]');
+    const on = el?.closest('[data-on]'), under = el?.closest('[data-under]'), fl = el?.closest('[data-floor]'), tr = el?.closest('[data-tray]');
     const onBox = el?.closest('.box[data-id]');
-    if (on) move(id, { on: on.dataset.on });
+    if (under) move(id, { under: under.dataset.under });
+    else if (on) move(id, { on: on.dataset.on });
     else if (onBox && onBox.dataset.id !== id) move(id, { on: onBox.dataset.id }); // refused with its reason if it won't lock (SC-S06)
     else if (tr) move(id, { tray: true });
     else if (fl && !el.closest('.box')) move(id, { floor: true });

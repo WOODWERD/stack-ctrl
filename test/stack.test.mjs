@@ -129,3 +129,20 @@ test('SC-A15 taking the bottom box out leaves the rest standing on the floor', (
   const l = s.layout(r);
   assert.deepEqual([l.stacks.length, l.stacks[0].boxes, b.standing], [1, [b.id], true]);
 });
+test('SC-A16 a box slid under the bottom of a floor stack lifts the stack onto it', () => {
+  const r = fresh();
+  const a = box(r, 'sys3-m-187'), b = box(r, 'sys3-m-137', { on: 'WW-001' }), x = box(r, 'sys3-m-437');
+  a.standing = true;
+  const res = s.moveBox(r, x.id, { under: a.id });
+  assert.ok(res.ok);
+  const st = s.layout(r).stacks[0];
+  assert.deepEqual(st.boxes, [x.id, a.id, b.id]);
+  assert.equal(st.height, 437 + 180 + 130);
+  res.undo();
+  assert.deepEqual(s.layout(r).stacks[0].boxes, [a.id, b.id]);
+  // a Classic can go under newer boxes, but a newer box can't go under a Classic
+  const cl = box(r, 'classic-4');
+  assert.ok(s.moveBox(r, cl.id, { under: a.id }).ok);
+  const r2 = fresh(); const c2 = box(r2, 'classic-2'); c2.standing = true; const n2 = box(r2, 'sys3-m-187');
+  assert.equal(s.moveBox(r2, n2.id, { under: c2.id }).ok, false);
+});
