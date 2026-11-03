@@ -1,5 +1,5 @@
 // Offline (SC-R53): network first, cache as a fallback
-const VERSION = 'stack-ctrl-x0.0.1';
+const VERSION = 'stack-ctrl-x0.0.2';
 const FILES = ['./', 'index.html', 'tokens.css', 'styles.css', 'chrome.js', 'core.js', 'systainers.js', 'store.js', 'app.js', 'manifest.webmanifest',
   'fonts/Inter-Regular.woff2', 'fonts/Inter-Medium.woff2', 'fonts/Inter-SemiBold.woff2', 'fonts/Inter-Bold.woff2', 'fonts/jetbrains-mono-latin-400-normal.woff2', 'fonts/jetbrains-mono-latin-500-normal.woff2', 'favicon.svg'];
 self.addEventListener('install', (e) => e.waitUntil(caches.open(VERSION).then((c) => c.addAll(FILES)).then(() => self.skipWaiting())));

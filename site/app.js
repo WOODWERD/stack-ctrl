@@ -17,7 +17,9 @@ function h(tag, attrs = {}, ...kids) {
   return e;
 }
 
-const S = { rec: null, q: '', loc: '', zoom: 'fit', sel: '', drag: null, note: null, undo: [], phone: false, updated: false };
+// Tool Ctrl's See in Stack Ctrl link puts the box ID after the #, so it opens found (TC-R156, SC-R60)
+const asked = (() => { try { return decodeURIComponent(location.hash.slice(1)).trim().slice(0, 20); } catch { return ''; } })();
+const S = { rec: null, q: asked, loc: '', zoom: 'fit', sel: '', drag: null, note: null, undo: [], phone: false, updated: false };
 const rec = () => S.rec;
 const chan = 'BroadcastChannel' in window ? new BroadcastChannel('tool-ctrl-record') : null; // SC-R06
 
