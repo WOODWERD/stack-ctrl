@@ -341,3 +341,6 @@ body.ro .box{cursor:pointer}
 .trayz{display:flex;flex-wrap:wrap;align-items:flex-end;gap:13px;padding:13px;border:1px dashed var(--strong);border-radius:8px;min-height:89px}
 .emptyfloor{height:144px;width:100%;border:1.5px dashed var(--strong);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--soft);font-size:var(--t-cap);text-align:center;padding:21px}
 body.ro .pl-sub,body.ro .pl-clip,body.ro .pl-pan{display:none}
+/* the carrying note floats, so nothing moves under the pointer while dragging */
+.carrynote{position:fixed;left:50%;bottom:21px;transform:translateX(-50%);z-index:40;max-width:min(610px,calc(100vw - 42px));background:var(--surface);box-shadow:0 8px 34px rgba(12,11,9,.25)}
+.droptier{outline:1.5px dashed var(--accent);outline-offset:3px}

@@ -59,7 +59,7 @@ export async function storageUse() {
 }
 export async function askToKeep() { try { return await navigator.storage.persist(); } catch { return false; } }
 
-// Stack Ctrl only (SC-R42): change sitsOn and location on stored boxes, read fresh in the same transaction,
+// Stack Ctrl only (SC-R42): change sitsOn, location and standing on stored boxes, read fresh in the same transaction,
 // so nothing else Tool Ctrl holds, and never the record's meta or ID counters, is written from a stale copy.
 export async function patchContainers(patches) {
   const d = await open();
@@ -67,7 +67,7 @@ export async function patchContainers(patches) {
   const st = tx.objectStore('containers');
   for (const p of patches) {
     const rq = st.get(p.id);
-    rq.onsuccess = () => { const row = rq.result; if (row) { row.sitsOn = p.sitsOn; row.location = p.location; st.put(row); } };
+    rq.onsuccess = () => { const row = rq.result; if (row) { row.sitsOn = p.sitsOn; row.location = p.location; row.standing = !!p.standing; st.put(row); } };
   }
   return done(tx);
 }

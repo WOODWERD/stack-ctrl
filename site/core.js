@@ -1,5 +1,6 @@
 // Stack Ctrl rules. No page code here: everything in this file is tested by SC-A ID.
-// It reads and writes Tool Ctrl's record (TC-R130 to TC-R144) and changes only sitsOn and location (SC-R42).
+// It reads and writes Tool Ctrl's record (TC-R130 to TC-R144) and changes only sitsOn, location and standing (SC-R42).
+// standing: a box that sits on nothing stands on the floor, not in the tray (SC-R41).
 import { SYSTAINERS } from './systainers.js';
 
 export const MODEL_KINDS = ['Systainer', 'Sortainer', 'Systainer drawer unit', 'Systainer tool', 'Cart']; // TC-R130
@@ -85,7 +86,7 @@ export function layout(rec) {
   for (const r of roots) {
     const { list, order } = chainFrom(r.id);
     const cart = isCart(r);
-    if (!cart && !list.length) { tray.push(r.id); placed.add(r.id); continue; }
+    if (!cart && !list.length && !r.standing) { tray.push(r.id); placed.add(r.id); continue; }
     placed.add(r.id); list.forEach((x) => placed.add(x));
     const base = r.sitsOn && !ids.has(r.sitsOn) ? getC(rec, r.sitsOn) : null; // SC-E03
     stacks.push({ cart: cart ? r.id : '', boxes: cart ? list : [r.id, ...list], orderNotSet: !order, location: locationOf(rec, r.id), standsOn: base ? base.id : '' });
@@ -133,16 +134,16 @@ export function moveBox(rec, id, to) {
   }
   if (isCart(c) && !to.tray && !to.floor) return { ok: false, why: 'A cart goes at the bottom of a stack.' };
   const touched = new Set([id, ...above.map((x) => x.id), ...displaced.map((x) => x.id)]);
-  const before = [...touched].map((t) => { const x = getC(rec, t); return [t, x.sitsOn, x.location]; });
+  const before = [...touched].map((t) => { const x = getC(rec, t); return [t, x.sitsOn, x.location, x.standing]; });
   const was = locationOf(rec, id);
   // close the gap: the boxes above take this box's place
-  for (const a of above) { a.sitsOn = c.sitsOn === a.id ? '' : c.sitsOn; if (!a.sitsOn) a.location = was; }
+  for (const a of above) { a.sitsOn = c.sitsOn === a.id ? '' : c.sitsOn; a.standing = !a.sitsOn; if (!a.sitsOn) a.location = was; }
   if (to.on) {
-    c.sitsOn = target.id;
-    for (const d of displaced) d.sitsOn = id;
+    c.sitsOn = target.id; c.standing = false;
+    for (const d of displaced) { d.sitsOn = id; d.standing = false; }
     c.location = locationOf(rec, target.id);
-  } else { c.sitsOn = ''; c.location = was; } // SC-R43: a box sent to the tray or floor keeps its last location
-  return { ok: true, undo: () => { for (const [t, s, l] of before) { const x = getC(rec, t); x.sitsOn = s; x.location = l; } }, touched: [...touched] };
+  } else { c.sitsOn = ''; c.location = was; c.standing = !!to.floor; } // SC-R41, SC-R43: floor or tray, keeping its last location
+  return { ok: true, undo: () => { for (const [t, s, l, st] of before) { const x = getC(rec, t); x.sitsOn = s; x.location = l; if (st === undefined) delete x.standing; else x.standing = st; } }, touched: [...touched] };
 }
 
 // ---------- search (SC-R60) ----------

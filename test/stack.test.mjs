@@ -112,3 +112,21 @@ test('SC-R22 heights read in mm and inches', () => {
   assert.equal(s.mmText(1159), '1,159 mm');
   assert.equal(s.inches(1159), '45 5/8 in');
 });
+test('SC-A14 one box dropped on the floor stands there as a stack, and back in the tray it leaves', () => {
+  const r = fresh();
+  const a = box(r, 'sys3-m-187');
+  assert.deepEqual(s.layout(r).tray, [a.id]);
+  assert.ok(s.moveBox(r, a.id, { floor: true }).ok);
+  let l = s.layout(r);
+  assert.deepEqual([l.stacks.length, l.stacks[0].height, l.tray.length], [1, 187, 0]);
+  assert.ok(s.moveBox(r, a.id, { tray: true }).ok);
+  l = s.layout(r);
+  assert.deepEqual([l.stacks.length, l.tray], [0, [a.id]]);
+});
+test('SC-A15 taking the bottom box out leaves the rest standing on the floor', () => {
+  const r = fresh();
+  const c = box(r, 'sys3-m-437'), b = box(r, 'sys3-m-187', { on: 'WW-001' });
+  assert.ok(s.moveBox(r, c.id, { tray: true }).ok);
+  const l = s.layout(r);
+  assert.deepEqual([l.stacks.length, l.stacks[0].boxes, b.standing], [1, [b.id], true]);
+});

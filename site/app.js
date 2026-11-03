@@ -52,7 +52,7 @@ function boxEl(c, addMm, { hit = false, bad = '', check = false } = {}) {
   const cls = ['box', m.noModel && 'nomodel', c.id === S.sel && 'sel', hit && 'hit', bad && 'badj', check && !bad && 'chk', S.drag?.id === c.id && 'ghost'].filter(Boolean).join(' ');
   const el = h('button', { type: 'button', class: cls, style: `width:${w}px;height:${hh}px`, 'data-id': c.id,
     'aria-label': `${c.id} ${c.name || ''}, ${m.name}${bad ? `. ${bad}` : check ? '. Check this fit' : ''}`, title: bad || (check ? 'Check this fit: no source confirms these two lock this way' : ''),
-    onclick: () => { if (S.justDragged) return; S.sel = S.sel === c.id ? '' : c.id; render(); },
+    onclick: () => { if (S.justDragged) return; S.sel = S.sel === c.id ? '' : c.id; render(); document.querySelector(`[data-id="${c.id}"]`)?.focus(); }, // keep focus for the arrow keys (SC-R50)
     onkeydown: (e) => keyMove(e, c.id),
     onpointerdown: (e) => startDrag(e, c.id) },
   profile(m).map(([k, st]) => h('b', { class: k, style: st })),
@@ -139,13 +139,13 @@ function render() {
         !S.phone && h('button', { type: 'button', class: 'key', disabled: !S.undo.length, onclick: undo }, 'Undo'),
         h('span', { class: 'count' }, h('b', {}, total), ' boxes · ', h('b', {}, L.stacks.length), ' stacks')),
       S.note && h('div', { class: `health ${S.note.tone}` }, h('b', {}, S.note.title), h('span', {}, S.note.text)),
-      S.drag && h('div', { class: 'health carry' }, h('b', {}, `Carrying ${S.drag.id}`), h('span', {}, 'Drop it on a lit place, on the floor to start a stack, or on the tray. Esc puts it back.')),
+      S.drag && h('div', { class: 'health carry carrynote', role: 'status' }, h('b', {}, `Carrying ${S.drag.id}`), h('span', {}, 'Drop it on a lit place, on the floor to start a stack, or on the tray. Esc puts it back.')),
       noModel.length > 0 && !S.drag && h('div', { class: 'health warn' }, h('b', {}, `${noModel.length} ${noModel.length === 1 ? 'box has' : 'boxes have'} no model`), h('span', {}, `${noModel.slice(0, 4).map((c) => c.id).join(', ')}${noModel.length > 4 ? ' and more' : ''} ${noModel.length === 1 ? 'is' : 'are'} drawn as an outline at a standard height until you pick ${noModel.length === 1 ? 'its' : 'their'} Systainer model in Tool Ctrl.`), h('a', { class: 'key', href: TOOL_CTRL }, 'Set in Tool Ctrl')),
       S.q && h('p', { class: 'small', style: 'margin:0' }, hits.size ? `${hits.size} found: ${[...hits].map((id) => { const st = L.stacks.find((x) => x.boxes.includes(id)); return `${id} ${st ? `in the stack on ${st.cart || 'the floor'}${st.location ? `, ${st.location}` : ''}` : 'in the tray'}`; }).slice(0, 4).join(' · ')}` : `No box matches “${S.q}”.`),
       h('div', { class: `floorz${S.drag ? ' dragging' : ''}`, 'data-floor': '1' }, stacks.length ? stacks.map(col) : h('div', { class: 'emptyfloor', 'data-floor': '1' }, S.phone ? 'No stacks yet.' : 'Drag a box from the tray onto the floor to start a stack. Drop the next one on top of it.')),
       h('p', { class: 'small', style: 'margin:0' }, `Heights are from the floor. Each box adds its height without its foot; the bottom foot counts once, or sits in the cart.${L.others ? ` ${L.others === 1 ? 'One container that isn\'t a Systainer, such as a bag or Packout, isn\'t' : `${L.others} containers that aren't Systainers, such as bags and Packouts, aren't`} shown.` : ''}`)));
 
-  const tray = h('section', { class: 'tier' },
+  const tray = h('section', { class: `tier${S.drag ? ' droptier' : ''}`, 'data-tray': '1' },
     h('div', { class: 'tier-h' }, h('span', { class: 'n' }, 2), h('h2', {}, 'Tray'), h('span', { class: 'tier-d' }, 'Boxes not in a stack'), h('span', { class: 'tier-s idle' }, `${L.tray.length} ${L.tray.length === 1 ? 'box' : 'boxes'}`)),
     h('div', { class: 'pad' },
       h('div', { class: `trayz${S.drag ? ' dragging' : ''}`, 'data-tray': '1' }, L.tray.length ? L.tray.map((id) => { const c = s.getC(r, id); return boxEl(c, s.modelOf(c).h, { hit: hits.has(id), bad: L.loops.includes(id) ? 'This box sat in a loop in the record' : '' }); }) : h('span', { class: 'small' }, 'Every box is in a stack.')),
@@ -190,7 +190,7 @@ async function move(id, to) {
 }
 async function save(ids) {
   const r = rec();
-  try { await patchContainers(ids.map((id) => { const c = s.getC(r, id); return { id, sitsOn: c.sitsOn, location: c.location }; })); chan?.postMessage({ from: 'stack-ctrl', ids }); }
+  try { await patchContainers(ids.map((id) => { const c = s.getC(r, id); return { id, sitsOn: c.sitsOn, location: c.location, standing: !!c.standing }; })); chan?.postMessage({ from: 'stack-ctrl', ids }); }
   catch { S.note = { tone: 'bad', title: 'Not saved', text: 'This browser refused to save. Reload Stack Ctrl and try again.' }; render(); }
 }
 async function undo() { const u = S.undo.pop(); if (!u) return; u.undo(); render(); await save(u.touched); } // SC-R44
