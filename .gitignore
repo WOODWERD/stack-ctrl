@@ -1,0 +1,6 @@
+.DS_Store
+node_modules/
+# Working files, kept private
+CLAUDE.md
+spec.md
+.claude/
