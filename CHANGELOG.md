@@ -2,6 +2,12 @@
 
 What changed in each version of [Stack Ctrl](https://woodwerd.github.io/stack-ctrl/), newest first. Versions are x-numbers while Stack Ctrl is a public beta.
 
+## x0.0.3 · 2026-11-05
+- Proposed stacks: a stack your own Claude read from a photo taken with Photo Ctrl shows above the floor, drawn to scale beside the photo, with how sure each box is.
+- Choose a box to see it outlined in the photo. Swap a box for another of the same model before accepting.
+- Accept moves the boxes as a set of drags would, with one Undo for the whole stack. A stack that won't lock shows the bad joint and can't be accepted.
+- A stack that names boxes Tool Ctrl hasn't added yet waits until it has.
+
 ## x0.0.2 · 2026-11-03
 - A box ID after the # in the link fills the search, so Tool Ctrl's See in Stack Ctrl opens with that box found.
 

@@ -347,3 +347,21 @@ body.ro .pl-sub,body.ro .pl-clip,body.ro .pl-pan{display:none}
 
 /* phones: hang the All WOODWERD tools menu from the full-width strip, so it can't run off the left edge */
 @media (max-width:767px){details.alltools,details.kitmenu{position:static}.toolmenu{left:0;right:0;width:auto;max-width:none}}
+
+/* ---------- Proposed stacks (SC-S10) ---------- */
+.propdraw{display:flex;gap:34px;align-items:flex-end;flex-wrap:wrap;padding:21px 13px 13px;background:var(--ground);border:1px solid var(--line);border-radius:8px}
+.prow{display:flex;align-items:center;gap:8px;margin-top:-1.5px}
+.prow .box{margin-top:0}
+.box.prop{border-style:dashed;cursor:pointer}
+.box.prop.sel{background:var(--accent-tint);box-shadow:inset 3px 0 0 var(--primary);border-style:solid}
+.nowlist{margin:0;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:3px;font-size:var(--t-cap);color:var(--soft)}
+.nowlist b{color:var(--ink);font-weight:500}
+.sure{font-size:var(--t-micro);font-weight:600;letter-spacing:.08em;text-transform:uppercase;border-radius:3px;padding:0 5px;white-space:nowrap;border:1px solid}
+.sure.s{color:var(--ok);border-color:var(--ok)}
+.sure.l{color:var(--ink);border-color:var(--strong)}
+.sure.g{color:var(--ink);border-color:var(--attention);border-style:dashed}
+.shot{position:relative;overflow:hidden;border-radius:8px;line-height:0;background:#0C0B09;width:100%;max-width:420px}
+.shot img{width:100%;height:auto;display:block}
+.shot svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.shot .hlt{position:absolute;transform:translateY(-100%);margin-top:-5px;background:#fff;color:#0C0B09;font:600 var(--t-micro) Inter,Arial,sans-serif;letter-spacing:.06em;text-transform:uppercase;border-radius:3px;padding:3px 6px;white-space:nowrap;line-height:1.3;box-shadow:0 0 0 1px #0C0B09;max-width:90%;overflow:hidden;text-overflow:ellipsis}
+.shot .hlt.below{transform:none;margin-top:5px}

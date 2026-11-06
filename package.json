@@ -2,5 +2,5 @@
   "name": "stack-ctrl",
   "private": true,
   "type": "module",
-  "scripts": { "test": "node --test test/stack.test.mjs" }
+  "scripts": { "test": "node --test test/stack.test.mjs test/proposals.test.mjs" }
 }
